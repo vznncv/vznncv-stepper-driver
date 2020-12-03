@@ -85,6 +85,9 @@ int BaseStepperMotor::_force_step_cancel()
     }
     // set neutral direction
     err = set_direction_impl(DIR_NONE);
+    if (!err) {
+        _last_dir = MoveDirection::DIR_NONE;
+    }
     if (err && !_err) {
         _err = err;
     }
@@ -363,7 +366,7 @@ BaseStepperMotor::MoveMode BaseStepperMotor::get_mode() const
     } else if (_execute_step_impl == &BaseStepperMotor::_execute_step_with_constant_acceleration) {
         return MODE_CONSTANT_ACCELERATION;
     } else if (_execute_step_impl == &BaseStepperMotor::_execute_step_with_custom_step) {
-        return MODE_CONSTANT_SPEED;
+        return MODE_CUSTOM_STEP;
     } else {
         // Invalid pointer state.
         // Implementation logic prohibit such states. So if we reach it, probably memory has been damaged.
@@ -434,7 +437,7 @@ int BaseStepperMotor::resume_movement()
     return _err;
 }
 
-int BaseStepperMotor::wait_stop()
+int BaseStepperMotor::wait_end_of_movement()
 {
     do {
         if (_err || _state == STATE_DISABLED) {

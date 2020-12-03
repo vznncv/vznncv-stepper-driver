@@ -8,6 +8,7 @@
  */
 #include "mbed.h"
 #include "vznncv_stepper_motor.h"
+#include "vznncv_stepper_motor_extra.h"
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -51,7 +52,7 @@ int check_error(int err, const char *expr)
 static DigitalOut user_led(APP_USER_LED);
 static InterruptIn user_button(APP_USER_BUTTON);
 static STM32SinglePulse single_pulse_generator(STEPPER_MOTOR_DRIVER_PIN_S, STEPPER_MOTOR_DRIVER_PULSE_WIDTH);
-static StepDirDriverStepperMotor stepper_motor(STEPPER_MOTOR_DRIVER_PIN_S, STEPPER_MOTOR_DRIVER_PIN_D, STEPPER_MOTOR_DRIVER_PIN_E, StepDirDriverStepperMotor::FLAG_DEFAULF_A4988, 1us);
+static StepDirDriverStepperMotor stepper_motor(STEPPER_MOTOR_DRIVER_PIN_S, STEPPER_MOTOR_DRIVER_PIN_D, STEPPER_MOTOR_DRIVER_PIN_E, StepDirDriverStepperMotor::FLAG_DEFAULF_A4988, STEPPER_MOTOR_DRIVER_PULSE_WIDTH);
 
 int main()
 {

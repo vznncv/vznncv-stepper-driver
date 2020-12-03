@@ -136,7 +136,6 @@ STM32SinglePulse::~STM32SinglePulse()
 
 int STM32SinglePulse::set_timings(nanoseconds_u32 pulse_width)
 {
-    MBED_ASSERT(pulse_width.count() >= 0);
     CriticalSectionLock lock;
     TIM_TypeDef *tim_instance = _pwm_get_instance(&_pwm);
 
@@ -187,7 +186,7 @@ int STM32SinglePulse::generate()
 // CustomSequenceWrapper implementation
 //
 
-SimpleSequenceWrapper::SimpleSequenceWrapper(Callback<int()> sequence_callback, microseconds_u32 interval)
+SimpleSequenceWrapper::SimpleSequenceWrapper(Callback<sample_t()> sequence_callback, microseconds_u32 interval)
     : _sequence_callback(sequence_callback)
     , _seqeunce_interval_us(interval.count())
     , _step_count(0)
@@ -199,9 +198,14 @@ SimpleSequenceWrapper::SimpleSequenceWrapper(Callback<int()> sequence_callback, 
 BaseStepperMotor::step_instruction_t SimpleSequenceWrapper::next(const BaseStepperMotor::position_t &pos)
 {
     int steps_to_go;
+    sample_t sample;
+
     if (_step_count == 0) {
-        steps_to_go = _sequence_callback();
-        steps_to_go -= pos.current;
+        sample = _sequence_callback();
+        if (sample.flags & FLAG_STOP) {
+            return { BaseStepperMotor::DIR_NONE, 0us };
+        }
+        steps_to_go = sample.value - pos.current;
 
         if (steps_to_go == 0) {
             _step_instruction.dir = BaseStepperMotor::DIR_NONE;

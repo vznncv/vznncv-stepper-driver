@@ -59,8 +59,42 @@ public:
  * This class converts such sequences to intervals between steps for such cases.
  */
 class SimpleSequenceWrapper : private NonCopyable<SimpleSequenceWrapper> {
+public:
+    enum ControlFlag : uint8_t {
+        /**
+         * Stop movement.
+         *
+         * If this flag is set, current value is ignored and movement is aborted.
+         */
+        FLAG_STOP = 0x01,
+    };
+
+    struct sample_t {
+        sample_t() = default;
+
+        sample_t(int value, uint8_t flags)
+            : value(value)
+            , flags(flags)
+        {
+        }
+
+        sample_t(int value)
+            : sample_t(value, 0)
+        {
+        }
+
+        /**
+         * Next target value.
+         */
+        int value;
+        /**
+         * Zero or more ORed ControlFlag flags.
+         */
+        uint8_t flags;
+    };
+
 private:
-    Callback<int()> _sequence_callback;
+    Callback<sample_t()> _sequence_callback;
     uint32_t _seqeunce_interval_us;
 
     BaseStepperMotor::step_instruction_t _step_instruction;
@@ -76,7 +110,7 @@ public:
      * @param sequence_callback sequence callback. Each call should return next sequence value.
      * @param interval interval between sequence samples
      */
-    SimpleSequenceWrapper(Callback<int()> sequence_callback, microseconds_u32 interval);
+    SimpleSequenceWrapper(Callback<sample_t()> sequence_callback, microseconds_u32 interval);
     ~SimpleSequenceWrapper() = default;
 
     /**

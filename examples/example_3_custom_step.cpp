@@ -79,13 +79,13 @@ public:
         _phi = _DEFAULT_PHASE;
     }
 
-    int next()
+    SimpleSequenceWrapper::sample_t next()
     {
         _phi += _d_phi;
         if (_phi > _DOUBLE_PI) {
             _phi -= _DOUBLE_PI;
         }
-        return _a * sinf(_phi);
+        return SimpleSequenceWrapper::sample_t(_a * sinf(_phi));
     }
 };
 

@@ -80,7 +80,7 @@ int main()
     t.start();
     CHECK_ERROR(stepper_motor.set_mode_constant_speed(max_speed));
     stepper_motor.move(distance);
-    CHECK_ERROR(stepper_motor.wait_stop());
+    CHECK_ERROR(stepper_motor.wait_end_of_movement());
     t.stop();
     printf("-- finish stepper motor driver testing --\n");
 

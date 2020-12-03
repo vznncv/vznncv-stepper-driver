@@ -52,6 +52,13 @@ public:
      * Current step instruction.
      */
     struct step_instruction_t {
+        step_instruction_t() = default;
+        step_instruction_t(MoveDirection dir, microseconds_u32 next)
+            : dir(dir)
+            , next(next)
+        {
+        }
+
         /**
          * Movement of current step
          */
@@ -68,6 +75,14 @@ public:
      * Description of current step for ::step_impl method.
      */
     struct step_description_t {
+        step_description_t() = default;
+        step_description_t(MoveDirection dir, microseconds_u32 next, int32_t step)
+            : dir(dir)
+            , next(next)
+            , step(step)
+        {
+        }
+
         /**
          * Movement direction of current step
          */
@@ -94,6 +109,13 @@ public:
      * Note: to handle overflow a serial number arithmetic (https://en.wikipedia.org/wiki/Serial_number_arithmetic) is used.
      */
     struct position_t {
+        position_t() = default;
+        position_t(int32_t current, int32_t target)
+            : current(current)
+            , target(target)
+        {
+        }
+
         /** Current stepper motor position */
         int32_t current;
         /** Target stepper motor position */
@@ -336,7 +358,7 @@ public:
      *
      * @return
      */
-    int wait_stop();
+    int wait_end_of_movement();
 
     /**
      * Get current position.
