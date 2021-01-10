@@ -195,6 +195,11 @@ SimpleSequenceWrapper::SimpleSequenceWrapper(Callback<sample_t()> sequence_callb
 {
 }
 
+SimpleSequenceWrapper::SimpleSequenceWrapper()
+    : SimpleSequenceWrapper(nullptr, 0ms)
+{
+}
+
 BaseStepperMotor::step_instruction_t SimpleSequenceWrapper::next(const BaseStepperMotor::position_t &pos)
 {
     int steps_to_go;
@@ -202,6 +207,7 @@ BaseStepperMotor::step_instruction_t SimpleSequenceWrapper::next(const BaseStepp
 
     if (_step_count == 0) {
         sample = _sequence_callback();
+
         if (sample.flags & FLAG_STOP) {
             return { BaseStepperMotor::DIR_NONE, 0us };
         }
@@ -245,6 +251,10 @@ BaseStepperMotor::step_instruction_t SimpleSequenceWrapper::next(const BaseStepp
                 _step_instruction.next += 1us;
             }
         }
+    }
+
+    if (_step_instruction.next == 0us) {
+        _step_instruction.next = 1us;
     }
 
     return _step_instruction;

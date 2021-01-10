@@ -111,7 +111,34 @@ public:
      * @param interval interval between sequence samples
      */
     SimpleSequenceWrapper(Callback<sample_t()> sequence_callback, microseconds_u32 interval);
+
+    /**
+     * Constructor.
+     */
+    SimpleSequenceWrapper();
+
     ~SimpleSequenceWrapper() = default;
+
+    /**
+     * Set sequence.
+     *
+     * This method should be invoked if default constructor is used.
+     *
+     * Note: this method additionally resets wrapper state.
+     *
+     * @param sequence_callback sequence callback. Each call should return next sequence value.
+     * @param interval interval between sequence samples
+     * @return 0 on success, otherwise non-zero value
+     */
+    int set_sequence(Callback<sample_t()> sequence_callback, microseconds_u32 interval)
+    {
+        _step_count = 0;
+        _step_adjustment_count = 0;
+        _steps_to_go_abs = 0;
+        _sequence_callback = sequence_callback;
+        _seqeunce_interval_us = interval.count();
+        return 0;
+    }
 
     /**
      * Get next step instruction.
