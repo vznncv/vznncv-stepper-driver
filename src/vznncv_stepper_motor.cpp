@@ -38,13 +38,22 @@ void BaseStepperMotor::StepTicker::force_cancel()
     core_util_atomic_flag_clear(&_schedule_flag);
 }
 
-microseconds_u32 BaseStepperMotor::StepTicker::delay_before_event()
+bool BaseStepperMotor::StepTicker::is_scheduled()
 {
     CriticalSectionLock lock;
 
     // check if we have any event
     if (!core_util_atomic_flag_test_and_set(&_schedule_flag)) {
         core_util_atomic_flag_clear(&_schedule_flag);
+        return false;
+    }
+    return true;
+}
+
+microseconds_u32 BaseStepperMotor::StepTicker::delay_before_event()
+{
+    // check if we have any event
+    if (!is_scheduled()) {
         return 0us;
     }
 
@@ -447,13 +456,13 @@ int BaseStepperMotor::wait_end_of_movement()
         if (delay_before_event == 0us) {
             break;
         }
-
-        // convert microseconds to milliseconds
-        milliseconds_u32 delay_before_event_ms = milliseconds_u32((delay_before_event + 999us).count() / 1000);
+        if (delay_before_event < 1ms) {
+            continue;
+        }
 
         // note: currently simply wait 1ms to simplify tick logic.
         // Later this behavior may be changed.
-        ThisThread::sleep_for(delay_before_event_ms);
+        ThisThread::sleep_for(std::chrono::duration_cast<milliseconds_u32>(delay_before_event));
     } while (true);
 
     return _err;
@@ -549,6 +558,7 @@ int BaseStepperMotor::set_state_impl(BaseStepperMotor::State state)
 //-----------------------------------------------------------------------------
 
 constexpr nanoseconds_u32 BaseSinglePulse::DEFAULT_PULSE_WIDTH;
+constexpr BaseSinglePulse::Polarity BaseSinglePulse::DEFAULT_POLARITY;
 
 //
 // SimpleOnePulse implementation
@@ -587,6 +597,8 @@ int SimpleSinglePulse::generate()
 //
 // StepDirDriverStepperMotor implementation
 //
+
+constexpr nanoseconds_u32 BaseStepDirDriverStepperMotor::DEFAULT_PULSE_LENGTH;
 
 StepDirDriverStepperMotor::StepDirDriverStepperMotor(PinName step_pin, PinName dir_pin, PinName en_pin, uint32_t flags, nanoseconds_u32 pulse_lenth_us)
     : StepDirDriverStepperMotor(new SimpleSinglePulse(step_pin, pulse_lenth_us, _get_polarity_from_flags(flags)), dir_pin, en_pin, flags)

@@ -147,6 +147,11 @@ private:
         void force_cancel();
 
         /**
+         * Check if any ticks are scheduled.
+         */
+        bool is_scheduled();
+
+        /**
          * Get approximate delay before next event.
          *
          * @return return 0us if there is no event or positive delay interval
@@ -248,7 +253,19 @@ public:
      * @param start enable stepper motor after initialization immediaty
      * @return 0 on success, otherwise non-zero value
      */
-    int init(bool start = true);
+    int init(bool start);
+
+    /**
+     * Stepper motor initialization function.
+     *
+     * It should be invoked once before any operations.
+     *
+     * @return 0 on success, otherwise non-zero value
+     */
+    int init()
+    {
+        return init(true);
+    }
 
     /**
      * Destructor.
@@ -481,6 +498,96 @@ protected:
 //-----------------------------------------------------------------------------
 
 /**
+ * Stepper motor driver interface for DRV8825 or A4988 like chips.
+ *
+ * The hardware interface include the following pins:
+ * - direction
+ * - step. One pulse force to make one step
+ * - enabled pin (optional), that can be used to enable/disable stepper motor
+ *
+ * This class doesn't provide any implementation, but expose configuration flags.
+ */
+class BaseStepDirDriverStepperMotor : public BaseStepperMotor {
+protected:
+    static constexpr uint32_t _FLAG_STEP_MASK = 0x1 << 0;
+    static constexpr uint32_t _FLAG_DIR_MASK = 0x1 << 1;
+    static constexpr uint32_t _FLAG_ENABLE_MASK = 0x1 << 2;
+
+    /**
+     * Get step polarity mode.
+     *
+     * @param flags
+     * @return false - normal mode, true - inverted
+     */
+    static constexpr bool _get_step_polarity_mode(uint32_t flags)
+    {
+        return flags & _FLAG_STEP_MASK ? true : false;
+    }
+
+    /**
+     * Get direction polarity mode.
+     *
+     * @param flags
+     * @return false - normal mode, true - inverted
+     */
+    static constexpr bool _get_dir_polarity_mode(uint32_t flags)
+    {
+        return flags & _FLAG_DIR_MASK ? true : false;
+    }
+
+    /**
+     * Get enable/disable polarity mode.
+     *
+     * @param flags
+     * @return false - normal mode, true - inverted
+     */
+    static constexpr bool _get_enable_polarity_mode(uint32_t flags)
+    {
+        return flags & _FLAG_ENABLE_MASK ? true : false;
+    }
+
+public:
+    /**
+     *  Connection pin mode flags.
+     */
+    enum PinModeFlags : uint32_t {
+        /** Step signal pin polarity flag mask */
+        FLAG_STEP_MASK = _FLAG_STEP_MASK,
+        /** Step signal pin polarity. Normal: idle - 0, pulse - 1 */
+        FLAG_STEP_NORMAL = 0,
+        /** Step signal pin polarity. Inverted: idle - 1, pulse - 0 */
+        FLAG_STEP_INVERTED = FLAG_STEP_MASK,
+        /** Step direction pin polarity flag mask */
+        FLAG_DIR_MASK = _FLAG_DIR_MASK,
+        /** Step direction pin polarity. Normal:  forward - 1, backward - 0 */
+        FLAG_DIR_NORMAL = 0,
+        /** Step direction pin polarity. Inverted:  forward - 0, backward - 2 */
+        FLAG_DIR_INVERTED = _FLAG_DIR_MASK,
+        /** Enable pin polarity mask */
+        FLAG_ENABLE_MASK = _FLAG_ENABLE_MASK,
+        /** Enable pin polarity. Normal: enabled - 1, disabled - 0 */
+        FLAG_ENABLE_NORMAL = 0,
+        /** Enable pin polarity. Inverted: enabled - 0, disabled - 1 */
+        FLAG_ENABLE_INVERTED = _FLAG_ENABLE_MASK,
+
+        // default flag combination
+        FLAG_DEFAULT = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_NORMAL,
+        // default flag combination for DRV8825
+        FLAG_DEFAULF_DRV8825 = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_INVERTED,
+        // default flag combination for A4988
+        FLAG_DEFAULF_A4988 = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_INVERTED,
+        // default flag combination for STSPIN820
+        FLAG_DEFAULF_ST820 = FLAG_STEP_NORMAL | FLAG_DIR_INVERTED | FLAG_ENABLE_NORMAL,
+    };
+
+    // pulse timings
+    static constexpr nanoseconds_u32 A4988_PULSE_LENGTH = 20ns;
+    static constexpr nanoseconds_u32 DRV8825_PULSE_LENGTH = 2000ns;
+    static constexpr nanoseconds_u32 STSPIN820_PULSE_LENGTH = 2000ns;
+    static constexpr nanoseconds_u32 DEFAULT_PULSE_LENGTH = 2000ns;
+};
+
+/**
  * Helper class to generate single short pulse on a some pin.
  *
  * Subclasses may use hardware acceleration for this operation.
@@ -502,7 +609,7 @@ public:
     };
 
     // recommended default parameters, that can be used before ::set_timings invocation
-    static constexpr nanoseconds_u32 DEFAULT_PULSE_WIDTH = 2'000ns;
+    static constexpr nanoseconds_u32 DEFAULT_PULSE_WIDTH = BaseStepDirDriverStepperMotor::DEFAULT_PULSE_LENGTH;
     static constexpr Polarity DEFAULT_POLARITY = POLARITY_HIGH;
 
 public:
@@ -568,45 +675,12 @@ public:
  * - step. One pulse force to make one step
  * - enabled pin (optional), that can be used to enable/disable stepper motor
  */
-class StepDirDriverStepperMotor : public BaseStepperMotor {
+class StepDirDriverStepperMotor : public BaseStepDirDriverStepperMotor {
 private:
-    static constexpr uint32_t _FLAG_STEP_MASK = 0x1 << 0;
-    static constexpr uint32_t _FLAG_DIR_MASK = 0x1 << 1;
-    static constexpr uint32_t _FLAG_ENABLE_MASK = 0x1 << 2;
-
-    static constexpr uint32_t _EXTRA_FLAG_CLEANUP_ONE_PULSE_MASK = 0x1 << 0;
-
-    static inline SimpleSinglePulse::Polarity _get_polarity_from_flags(uint32_t flags)
+    static constexpr SimpleSinglePulse::Polarity _get_polarity_from_flags(uint32_t flags)
     {
-        return flags & _FLAG_STEP_MASK ? BaseSinglePulse::POLARITY_HIGH : BaseSinglePulse::POLARITY_LOW;
+        return _get_step_polarity_mode(flags) ? BaseSinglePulse::POLARITY_HIGH : BaseSinglePulse::POLARITY_LOW;
     }
-
-public:
-    // connection pin mode flags
-    enum PinModeFlags : uint32_t {
-        // normal step polarity: idle - 0, pulse - 1
-        FLAG_STEP_NORMAL = 0,
-        // inverted step polarity: idle - 1, pulse - 0
-        FLAG_STEP_INVERTED = _FLAG_STEP_MASK,
-        // normal direction polarity: forward - 1, backward - 0
-        FLAG_DIR_NORMAL = 0,
-        // inverted direction polarity: forward - 0, backward - 1
-        FLAG_DIR_INVERTED = _FLAG_DIR_MASK,
-        // normal enable pin polarity: enabled - 1, disabled - 1
-        FLAG_ENABLE_NORMAL = 0,
-        // inveted enable pin polarity: enabled - 0, disabled - 1
-        FLAG_ENABLE_INVERTED = _FLAG_ENABLE_MASK,
-        // default flag combination
-        FLAG_DEFAULT = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_NORMAL,
-        // default flag combination for DRV8825
-        FLAG_DEFAULF_DRV8825 = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_INVERTED,
-        // default flag combination for A4988
-        FLAG_DEFAULF_A4988 = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_INVERTED,
-        // default flag combination for STSPIN820
-        FLAG_DEFAULF_ST820 = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_NORMAL,
-    };
-
-    static constexpr nanoseconds_u32 DEFAULT_PULSE_LENTH_US = BaseSinglePulse::DEFAULT_PULSE_WIDTH;
 
 private:
     enum StateFlags : uint8_t {
@@ -628,16 +702,15 @@ public:
      * @param dir_pin direction
      * @param en_pin enable pin
      * @param flags pin flags. See ::PinModeFlags
-     * @param pulse_lenth_us minimal pulse length
+     * @param pulse_lenth minimal pulse length
      */
-    StepDirDriverStepperMotor(PinName step_pin, PinName dir_pin, PinName en_pin = NC, uint32_t flags = FLAG_DEFAULT, nanoseconds_u32 pulse_lenth_us = DEFAULT_PULSE_LENTH_US);
+    StepDirDriverStepperMotor(PinName step_pin, PinName dir_pin, PinName en_pin = NC, uint32_t flags = FLAG_DEFAULT, nanoseconds_u32 pulse_length = DEFAULT_PULSE_LENGTH);
 
     /**
      * @param step_pin step pulse pin
      * @param dir_pin direction
      * @param en_pin enable pin
      * @param flags pin flags. See ::PinModeFlags
-     * @param pulse_lenth_us minimal pulse length
      */
     StepDirDriverStepperMotor(BaseSinglePulse *pulse_generator, PinName dir_pin, PinName en_pin = NC, uint32_t flags = FLAG_DEFAULT);
     virtual ~StepDirDriverStepperMotor() override;
