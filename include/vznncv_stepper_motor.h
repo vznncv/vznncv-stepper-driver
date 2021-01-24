@@ -206,7 +206,7 @@ private:
             // current speed
             float current_speed;
 
-            // note: Due calculation errors an algorithm stat deacceleration a little bit late.
+            // note: Due calculation errors an algorithm starts deceleration a little bit late.
             //       It can be fixed by adding the `log(steps_to_stop) / 4 + log(e)` to steps_to_stop
             //       variable in the `_execute_step_with_acceleration` function. But logarithm logarithm
             //       calculation isn't fast, so approximate it the linear function `steps_to_stop * _STS_COMP_A + _STS_COMP_B`
@@ -250,7 +250,7 @@ public:
      *
      * It should be invoked once before any operations.
      *
-     * @param start enable stepper motor after initialization immediaty
+     * @param start enable stepper motor after initialization immediately
      * @return 0 on success, otherwise non-zero value
      */
     int init(bool start);
@@ -401,7 +401,7 @@ public:
     int get_current_position() const;
 
     /**
-     * Change current position forcely.
+     * Change current position forcefully.
      *
      * This method can be used to reset driver state or change "zero" stepper motor position after calibration.
      *
@@ -422,7 +422,7 @@ public:
      * Enable/disabled stepper motor.
      *
      * It's recommended to call ::wait_stopping before stepper motor disabling,
-     * as disabling causes immediaty stops any movement.
+     * as disabling causes immediate termination of any movement.
      *
      * After enabling, stepper motor will try to resume movement.
      *
@@ -573,18 +573,18 @@ public:
         // default flag combination
         FLAG_DEFAULT = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_NORMAL,
         // default flag combination for DRV8825
-        FLAG_DEFAULF_DRV8825 = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_INVERTED,
+        FLAG_DEFAULT_DRV8825 = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_INVERTED,
         // default flag combination for A4988
-        FLAG_DEFAULF_A4988 = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_INVERTED,
+        FLAG_DEFAULT_A4988 = FLAG_STEP_NORMAL | FLAG_DIR_NORMAL | FLAG_ENABLE_INVERTED,
         // default flag combination for STSPIN820
-        FLAG_DEFAULF_ST820 = FLAG_STEP_NORMAL | FLAG_DIR_INVERTED | FLAG_ENABLE_NORMAL,
+        FLAG_DEFAULT_ST820 = FLAG_STEP_NORMAL | FLAG_DIR_INVERTED | FLAG_ENABLE_NORMAL,
     };
 
     // pulse timings
-    static constexpr nanoseconds_u32 A4988_PULSE_LENGTH = 20ns;
-    static constexpr nanoseconds_u32 DRV8825_PULSE_LENGTH = 2000ns;
-    static constexpr nanoseconds_u32 STSPIN820_PULSE_LENGTH = 2000ns;
-    static constexpr nanoseconds_u32 DEFAULT_PULSE_LENGTH = 2000ns;
+    static constexpr nanoseconds_u32 PULSE_LENGTH_A4988 = 1000ns;
+    static constexpr nanoseconds_u32 PULSE_LENGTH_DRV8825 = 2000ns;
+    static constexpr nanoseconds_u32 PULSE_LENGTH_STSPIN820 = 20ns;
+    static constexpr nanoseconds_u32 PULSE_LENGTH_DEFAULT = 2000ns;
 };
 
 /**
@@ -609,7 +609,7 @@ public:
     };
 
     // recommended default parameters, that can be used before ::set_timings invocation
-    static constexpr nanoseconds_u32 DEFAULT_PULSE_WIDTH = BaseStepDirDriverStepperMotor::DEFAULT_PULSE_LENGTH;
+    static constexpr nanoseconds_u32 DEFAULT_PULSE_WIDTH = BaseStepDirDriverStepperMotor::PULSE_LENGTH_DEFAULT;
     static constexpr Polarity DEFAULT_POLARITY = POLARITY_HIGH;
 
 public:
@@ -702,9 +702,9 @@ public:
      * @param dir_pin direction
      * @param en_pin enable pin
      * @param flags pin flags. See ::PinModeFlags
-     * @param pulse_lenth minimal pulse length
+     * @param pulse_length minimal pulse length
      */
-    StepDirDriverStepperMotor(PinName step_pin, PinName dir_pin, PinName en_pin = NC, uint32_t flags = FLAG_DEFAULT, nanoseconds_u32 pulse_length = DEFAULT_PULSE_LENGTH);
+    StepDirDriverStepperMotor(PinName step_pin, PinName dir_pin, PinName en_pin = NC, uint32_t flags = FLAG_DEFAULT, nanoseconds_u32 pulse_length = PULSE_LENGTH_DEFAULT);
 
     /**
      * @param step_pin step pulse pin

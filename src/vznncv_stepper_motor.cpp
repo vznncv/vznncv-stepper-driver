@@ -213,7 +213,7 @@ BaseStepperMotor::step_instruction_t BaseStepperMotor::_execute_step_with_consta
     }
     if (steps_to_go > 0) {
         if (steps_to_go <= steps_to_stop) {
-            // need deacceleration
+            // need deceleration
             new_speed -= dt_us * params.max_acceleration_div_mil;
 
             if (new_speed < 0) {
@@ -228,7 +228,7 @@ BaseStepperMotor::step_instruction_t BaseStepperMotor::_execute_step_with_consta
         }
     } else {
         if (steps_to_go >= steps_to_stop) {
-            // need deacceleration
+            // need deceleration
             new_speed += dt_us * params.max_acceleration_div_mil;
 
             if (new_speed > 0) {
@@ -598,10 +598,13 @@ int SimpleSinglePulse::generate()
 // StepDirDriverStepperMotor implementation
 //
 
-constexpr nanoseconds_u32 BaseStepDirDriverStepperMotor::DEFAULT_PULSE_LENGTH;
+constexpr nanoseconds_u32 BaseStepDirDriverStepperMotor::PULSE_LENGTH_DEFAULT;
+constexpr nanoseconds_u32 BaseStepDirDriverStepperMotor::PULSE_LENGTH_A4988;
+constexpr nanoseconds_u32 BaseStepDirDriverStepperMotor::PULSE_LENGTH_STSPIN820;
+constexpr nanoseconds_u32 BaseStepDirDriverStepperMotor::PULSE_LENGTH_DRV8825;
 
-StepDirDriverStepperMotor::StepDirDriverStepperMotor(PinName step_pin, PinName dir_pin, PinName en_pin, uint32_t flags, nanoseconds_u32 pulse_lenth_us)
-    : StepDirDriverStepperMotor(new SimpleSinglePulse(step_pin, pulse_lenth_us, _get_polarity_from_flags(flags)), dir_pin, en_pin, flags)
+StepDirDriverStepperMotor::StepDirDriverStepperMotor(PinName step_pin, PinName dir_pin, PinName en_pin, uint32_t flags, nanoseconds_u32 pulse_length_us)
+    : StepDirDriverStepperMotor(new SimpleSinglePulse(step_pin, pulse_length_us, _get_polarity_from_flags(flags)), dir_pin, en_pin, flags)
 {
     _state_flags |= _STATE_FLAG_CLEANUP_PULSE_GENERATOR_MASK;
 }

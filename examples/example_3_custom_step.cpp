@@ -27,8 +27,8 @@ using vznncvsteppermotor::StepDirDriverStepperMotor;
 constexpr PinName STEPPER_MOTOR_DRIVER_PIN_S = PB_1;
 constexpr PinName STEPPER_MOTOR_DRIVER_PIN_D = PB_0;
 constexpr PinName STEPPER_MOTOR_DRIVER_PIN_E = PA_7;
-constexpr StepDirDriverStepperMotor::PinModeFlags STEPPER_MOTOR_DRIVER_FLAGS = StepDirDriverStepperMotor::FLAG_DEFAULF_A4988;
-constexpr nanoseconds STEPPER_MOTOR_DRIVER_PULSE_WIDTH = 1us;
+constexpr auto STEPPER_MOTOR_DRIVER_FLAGS = StepDirDriverStepperMotor::FLAG_DEFAULT_A4988;
+constexpr nanoseconds STEPPER_MOTOR_DRIVER_PULSE_WIDTH = StepDirDriverStepperMotor::PULSE_LENGTH_A4988;
 constexpr int STEPPER_MOTOR_SUBSTEP = 4;
 constexpr PinName APP_USER_LED = LED1;
 constexpr PinName APP_USER_BUTTON = PB_12;
@@ -54,7 +54,7 @@ int check_error(int err, const char *expr)
 
 static DigitalOut user_led(APP_USER_LED);
 static InterruptIn user_button(APP_USER_BUTTON);
-static StepDirDriverStepperMotor stepper_motor(STEPPER_MOTOR_DRIVER_PIN_S, STEPPER_MOTOR_DRIVER_PIN_D, STEPPER_MOTOR_DRIVER_PIN_E, StepDirDriverStepperMotor::FLAG_DEFAULF_A4988, STEPPER_MOTOR_DRIVER_PULSE_WIDTH);
+static StepDirDriverStepperMotor stepper_motor(STEPPER_MOTOR_DRIVER_PIN_S, STEPPER_MOTOR_DRIVER_PIN_D, STEPPER_MOTOR_DRIVER_PIN_E, STEPPER_MOTOR_DRIVER_FLAGS, STEPPER_MOTOR_DRIVER_PULSE_WIDTH);
 
 class SineSequenceGenerator {
 private:

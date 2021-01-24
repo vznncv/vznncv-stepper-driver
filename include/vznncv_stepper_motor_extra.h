@@ -95,7 +95,7 @@ public:
 
 private:
     Callback<sample_t()> _sequence_callback;
-    uint32_t _seqeunce_interval_us;
+    uint32_t _sequence_interval_us;
 
     BaseStepperMotor::step_instruction_t _step_instruction;
 
@@ -136,7 +136,7 @@ public:
         _step_adjustment_count = 0;
         _steps_to_go_abs = 0;
         _sequence_callback = sequence_callback;
-        _seqeunce_interval_us = interval.count();
+        _sequence_interval_us = interval.count();
         return 0;
     }
 

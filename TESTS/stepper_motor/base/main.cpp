@@ -416,7 +416,7 @@ void test_active_base_enable_disable_functionality()
     TEST_ASSERT_EQUAL(0, dsm.dsm_get_total_steps_backward());
     TEST_ASSERT_EQUAL(dist_to_go, dsm.distance_to_go());
 
-    // check that ::wait_stopping resum control immediately
+    // check that ::wait_stopping resume control immediately
     t.start();
     TEST_ASSERT_EQUAL(0, dsm.wait_end_of_movement());
     t.stop();
@@ -441,7 +441,7 @@ void test_active_base_enable_disable_functionality()
 static void test_configuration_methods()
 {
     float max_speed;
-    float max_accelration;
+    float max_acceleration;
     BaseStepperMotor::CustomStepCallback custom_step_cb;
 
     BaseStepperMotor::CustomStepCallback custom_step_cb_impl = [](const BaseStepperMotor::position_t &pos) -> BaseStepperMotor::step_instruction_t {
@@ -457,15 +457,15 @@ static void test_configuration_methods()
     TEST_ASSERT_EQUAL(0, dsm.get_mode_params_constant_speed(max_speed));
     TEST_ASSERT_EQUAL(1200.0f, max_speed);
     TEST_ASSERT_EQUAL(BaseStepperMotor::MODE_CONSTANT_SPEED, dsm.get_mode());
-    TEST_ASSERT_NOT_EQUAL(0, dsm.get_mode_params_constant_acceleration(max_speed, max_accelration));
+    TEST_ASSERT_NOT_EQUAL(0, dsm.get_mode_params_constant_acceleration(max_speed, max_acceleration));
     TEST_ASSERT_NOT_EQUAL(0, dsm.get_mode_params_custom_step(custom_step_cb));
     // check constant acceleration parameters
     TEST_ASSERT_EQUAL(0, dsm.set_mode_constant_acceleration(800.0f, 500.0f));
     max_speed = 0.0f;
-    max_accelration = 0.0f;
-    TEST_ASSERT_EQUAL(0, dsm.get_mode_params_constant_acceleration(max_speed, max_accelration));
+    max_acceleration = 0.0f;
+    TEST_ASSERT_EQUAL(0, dsm.get_mode_params_constant_acceleration(max_speed, max_acceleration));
     TEST_ASSERT_EQUAL(800.0f, max_speed);
-    TEST_ASSERT_EQUAL(500.0f, max_accelration);
+    TEST_ASSERT_EQUAL(500.0f, max_acceleration);
     TEST_ASSERT_EQUAL(BaseStepperMotor::MODE_CONSTANT_ACCELERATION, dsm.get_mode());
     TEST_ASSERT_NOT_EQUAL(0, dsm.get_mode_params_constant_speed(max_speed));
     TEST_ASSERT_NOT_EQUAL(0, dsm.get_mode_params_custom_step(custom_step_cb));
@@ -476,7 +476,7 @@ static void test_configuration_methods()
     TEST_ASSERT_TRUE(custom_step_cb == custom_step_cb_impl);
     TEST_ASSERT_EQUAL(BaseStepperMotor::MODE_CUSTOM_STEP, dsm.get_mode());
     TEST_ASSERT_NOT_EQUAL(0, dsm.get_mode_params_constant_speed(max_speed));
-    TEST_ASSERT_NOT_EQUAL(0, dsm.get_mode_params_constant_acceleration(max_speed, max_accelration));
+    TEST_ASSERT_NOT_EQUAL(0, dsm.get_mode_params_constant_acceleration(max_speed, max_acceleration));
 
     // check step parameters
     dsm.set_mode_constant_speed(1000.0f);
@@ -501,7 +501,7 @@ void test_impl_errors()
     TEST_ASSERT_EQUAL(0, dsm.init());
     dsm.set_mode_constant_speed(1000.0f);
     TEST_ASSERT_EQUAL(0, dsm.get_error());
-    auto reset_postions = [](BaseStepperMotor &bsm) {
+    auto reset_positions = [](BaseStepperMotor &bsm) {
         bsm.set_current_position(0);
         bsm.set_target_position(0);
     };
@@ -513,7 +513,7 @@ void test_impl_errors()
 
     // check that step error prevents movement
     dsm.dsm_reset_statistic();
-    reset_postions(dsm);
+    reset_positions(dsm);
     dsm.dsm_err_step_impl(-1);
     dsm.move(10);
     TEST_ASSERT_NOT_EQUAL(0, dsm.wait_end_of_movement());
@@ -532,7 +532,7 @@ void test_impl_errors()
 
     // check that direction error prevents movement
     dsm.dsm_reset_statistic();
-    reset_postions(dsm);
+    reset_positions(dsm);
     dsm.dsm_err_set_direction_impl(-1);
     dsm.move(5);
     TEST_ASSERT_NOT_EQUAL(0, dsm.wait_end_of_movement());
@@ -551,7 +551,7 @@ void test_impl_errors()
 
     // check set state error
     dsm.dsm_reset_statistic();
-    reset_postions(dsm);
+    reset_positions(dsm);
     TEST_ASSERT_EQUAL(BaseStepperMotor::STATE_ENABLED, dsm.get_state());
     dsm.dsm_err_set_state_impl(-1);
     TEST_ASSERT_NOT_EQUAL(0, dsm.set_state(BaseStepperMotor::STATE_DISABLED));

@@ -188,7 +188,7 @@ int STM32SinglePulse::generate()
 
 SimpleSequenceWrapper::SimpleSequenceWrapper(Callback<sample_t()> sequence_callback, microseconds_u32 interval)
     : _sequence_callback(sequence_callback)
-    , _seqeunce_interval_us(interval.count())
+    , _sequence_interval_us(interval.count())
     , _step_count(0)
     , _step_adjustment_count(0)
     , _steps_to_go_abs(0)
@@ -215,7 +215,7 @@ BaseStepperMotor::step_instruction_t SimpleSequenceWrapper::next(const BaseStepp
 
         if (steps_to_go == 0) {
             _step_instruction.dir = BaseStepperMotor::DIR_NONE;
-            _step_instruction.next = microseconds_u32(_seqeunce_interval_us);
+            _step_instruction.next = microseconds_u32(_sequence_interval_us);
             _step_count = 1;
         } else {
             if (steps_to_go > 0) {
@@ -225,8 +225,8 @@ BaseStepperMotor::step_instruction_t SimpleSequenceWrapper::next(const BaseStepp
                 steps_to_go = -steps_to_go;
             }
             _step_count = steps_to_go;
-            _step_instruction.next = microseconds_u32(_seqeunce_interval_us / steps_to_go);
-            _step_adjustment_count = _seqeunce_interval_us / steps_to_go;
+            _step_instruction.next = microseconds_u32(_sequence_interval_us / steps_to_go);
+            _step_adjustment_count = _sequence_interval_us / steps_to_go;
             if (_steps_to_go_abs > steps_to_go) {
                 _step_adjustment_count = -_step_adjustment_count;
                 _step_adjustment_count--;

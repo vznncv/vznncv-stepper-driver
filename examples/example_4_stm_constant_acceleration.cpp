@@ -22,8 +22,8 @@ using vznncvsteppermotor::STM32SinglePulse;
 constexpr PinName STEPPER_MOTOR_DRIVER_PIN_S = PB_1; // this pin should support STM32 one pulse mode!
 constexpr PinName STEPPER_MOTOR_DRIVER_PIN_D = PB_0;
 constexpr PinName STEPPER_MOTOR_DRIVER_PIN_E = PA_7;
-constexpr StepDirDriverStepperMotor::PinModeFlags STEPPER_MOTOR_DRIVER_FLAGS = StepDirDriverStepperMotor::FLAG_DEFAULF_A4988;
-constexpr nanoseconds STEPPER_MOTOR_DRIVER_PULSE_WIDTH = 1us;
+constexpr auto STEPPER_MOTOR_DRIVER_FLAGS = StepDirDriverStepperMotor::FLAG_DEFAULT_A4988;
+constexpr nanoseconds STEPPER_MOTOR_DRIVER_PULSE_WIDTH = StepDirDriverStepperMotor::PULSE_LENGTH_A4988;
 constexpr int STEPPER_MOTOR_SUBSTEP = 4;
 constexpr float STEPPER_MOTOR_MAX_SPEED = 2000.0f;
 constexpr float STEPPER_MOTOR_MAX_ACCELERATION = 1000.0f;
@@ -52,7 +52,7 @@ int check_error(int err, const char *expr)
 static DigitalOut user_led(APP_USER_LED);
 static InterruptIn user_button(APP_USER_BUTTON);
 static STM32SinglePulse single_pulse_generator(STEPPER_MOTOR_DRIVER_PIN_S, STEPPER_MOTOR_DRIVER_PULSE_WIDTH);
-static StepDirDriverStepperMotor stepper_motor(STEPPER_MOTOR_DRIVER_PIN_S, STEPPER_MOTOR_DRIVER_PIN_D, STEPPER_MOTOR_DRIVER_PIN_E, StepDirDriverStepperMotor::FLAG_DEFAULF_A4988, STEPPER_MOTOR_DRIVER_PULSE_WIDTH);
+static StepDirDriverStepperMotor stepper_motor(STEPPER_MOTOR_DRIVER_PIN_S, STEPPER_MOTOR_DRIVER_PIN_D, STEPPER_MOTOR_DRIVER_PIN_E, STEPPER_MOTOR_DRIVER_FLAGS, STEPPER_MOTOR_DRIVER_PULSE_WIDTH);
 
 int main()
 {
