@@ -96,6 +96,7 @@ int BaseStepperMotor::_force_step_cancel()
     err = set_direction_impl(DIR_NONE);
     if (!err) {
         _last_dir = MoveDirection::DIR_NONE;
+        _last_delay = 0us;
     }
     if (err && !_err) {
         _err = err;
@@ -147,6 +148,9 @@ microseconds_u32 BaseStepperMotor::_execute_step()
             _last_dir = MoveDirection::DIR_NONE;
         }
     }
+
+    // save delay value for a speed estimation
+    _last_delay = step_description.next;
 
     return step_instruction.next;
 }
@@ -268,6 +272,7 @@ BaseStepperMotor::BaseStepperMotor()
     , _execute_step_impl(nullptr)
     , _position{ 0, 0 }
     , _err(0)
+    , _last_delay(0us)
     , _initialized(false)
     , _last_dir(DIR_NONE)
     , _state(STATE_DISABLED)
@@ -335,6 +340,11 @@ int BaseStepperMotor::set_mode_constant_speed(float max_speed)
 
 int BaseStepperMotor::set_mode_constant_acceleration(float max_speed, float max_acceleration)
 {
+    return set_mode_constant_acceleration(max_speed, max_acceleration, 0.0f);
+}
+
+int BaseStepperMotor::set_mode_constant_acceleration(float max_speed, float max_acceleration, float initial_speed)
+{
     MBED_ASSERT(max_speed > 0);
     MBED_ASSERT(max_acceleration > 0);
     CriticalSectionLock lock;
@@ -345,7 +355,7 @@ int BaseStepperMotor::set_mode_constant_acceleration(float max_speed, float max_
     _execute_step_impl = &BaseStepperMotor::_execute_step_with_constant_acceleration;
     params.max_speed = max_speed;
     params.max_acceleration = max_acceleration;
-    params.current_speed = 0.0f;
+    params.current_speed = initial_speed;
     // helper calculation constants
     params.one_div_double_acc = (1.0f / (2.0f * max_acceleration)) * params.STS_COMP_A;
     params.min_step_speed = sqrtf(max_acceleration * 2);
@@ -497,6 +507,32 @@ int BaseStepperMotor::distance_to_go() const
     // we relies on a two's complement representation of integer number
     // and serial number arithmetic to process overflow correctly
     return _position.target - _position.current;
+}
+
+float BaseStepperMotor::get_current_speed() const
+{
+    float result;
+    if (_last_delay == 0ms) {
+        return 0;
+    }
+    result = 1'000'000.0f / _last_delay.count();
+    if (_last_dir == DIR_BACKWARD) {
+        result = -result;
+    }
+    return result;
+}
+
+int BaseStepperMotor::get_current_speed_int() const
+{
+    int result;
+    if (_last_delay == 0ms) {
+        return 0;
+    }
+    result = 1'000'000 / _last_delay.count();
+    if (_last_dir == DIR_BACKWARD) {
+        result = -result;
+    }
+    return result;
 }
 
 int BaseStepperMotor::set_state(BaseStepperMotor::State state)

@@ -564,6 +564,150 @@ void test_impl_errors()
     TEST_ASSERT_EQUAL(BaseStepperMotor::STATE_DISABLED, dsm.get_state());
 }
 
+void test_smooth_mode_switch_forward_with_int_speed_estimation()
+{
+    DummyStepperMotor dsm;
+    int switch_speed;
+    int switch_pos;
+
+    TEST_ASSERT_EQUAL(0, dsm.init());
+    dsm.set_mode_constant_speed(1000.0f);
+
+    // check initial speed
+    TEST_ASSERT_EQUAL(0, dsm.get_current_speed_int());
+
+    // move
+    dsm.move(1000);
+    ThisThread::sleep_for(500ms);
+
+    // emergency stop
+    {
+        CriticalSectionLock lock;
+        switch_speed = dsm.get_current_speed_int();
+        switch_pos = dsm.get_current_position();
+        dsm.set_mode_constant_acceleration(1000.0f, 2000.0f, switch_speed);
+        dsm.set_target_position(switch_pos);
+    }
+    dsm.wait_end_of_movement();
+
+    // check result speed
+    TEST_ASSERT_EQUAL(0, dsm.get_current_speed_int());
+
+    // check results
+    TEST_ASSERT_INT_WITHIN(50, 500, switch_pos);
+    TEST_ASSERT_INT_WITHIN(50, 1000, switch_speed);
+    TEST_ASSERT_INT_WITHIN(50, 750, dsm.dsm_get_total_steps_forward());
+    TEST_ASSERT_INT_WITHIN(50, 250, dsm.dsm_get_total_steps_backward());
+}
+
+void test_smooth_mode_switch_backward_with_int_speed_estimation()
+{
+    DummyStepperMotor dsm;
+    int switch_speed;
+    int switch_pos;
+
+    TEST_ASSERT_EQUAL(0, dsm.init());
+    dsm.set_mode_constant_speed(1000.0f);
+
+    // check initial speed
+    TEST_ASSERT_EQUAL(0, dsm.get_current_speed_int());
+
+    // move
+    dsm.move(-1000);
+    ThisThread::sleep_for(500ms);
+
+    // emergency stop
+    {
+        CriticalSectionLock lock;
+        switch_speed = dsm.get_current_speed_int();
+        switch_pos = dsm.get_current_position();
+        dsm.set_mode_constant_acceleration(1000.0f, 2000.0f, switch_speed);
+        dsm.set_target_position(switch_pos);
+    }
+    dsm.wait_end_of_movement();
+
+    // check result speed
+    TEST_ASSERT_EQUAL(0, dsm.get_current_speed_int());
+
+    // check results
+    TEST_ASSERT_INT_WITHIN(50, -500, switch_pos);
+    TEST_ASSERT_INT_WITHIN(50, -1000, switch_speed);
+    TEST_ASSERT_INT_WITHIN(50, 250, dsm.dsm_get_total_steps_forward());
+    TEST_ASSERT_INT_WITHIN(50, 750, dsm.dsm_get_total_steps_backward());
+}
+
+void test_smooth_mode_switch_forward_with_float_speed_estimation()
+{
+    DummyStepperMotor dsm;
+    float switch_speed;
+    int switch_pos;
+
+    TEST_ASSERT_EQUAL(0, dsm.init());
+    dsm.set_mode_constant_speed(1000.0f);
+
+    // check initial speed
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, dsm.get_current_speed());
+
+    // move
+    dsm.move(1000);
+    ThisThread::sleep_for(500ms);
+
+    // emergency stop
+    {
+        CriticalSectionLock lock;
+        switch_speed = dsm.get_current_speed();
+        switch_pos = dsm.get_current_position();
+        dsm.set_mode_constant_acceleration(1000.0f, 2000.0f, switch_speed);
+        dsm.set_target_position(switch_pos);
+    }
+    dsm.wait_end_of_movement();
+
+    // check result speed
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, dsm.get_current_speed());
+
+    // check results
+    TEST_ASSERT_INT_WITHIN(50, 500, switch_pos);
+    TEST_ASSERT_FLOAT_WITHIN(50.0f, 1000.0f, switch_speed);
+    TEST_ASSERT_INT_WITHIN(50, 750, dsm.dsm_get_total_steps_forward());
+    TEST_ASSERT_INT_WITHIN(50, 250, dsm.dsm_get_total_steps_backward());
+}
+
+void test_smooth_mode_switch_backward_with_float_speed_estimation()
+{
+    DummyStepperMotor dsm;
+    float switch_speed;
+    int switch_pos;
+
+    TEST_ASSERT_EQUAL(0, dsm.init());
+    dsm.set_mode_constant_speed(1000.0f);
+
+    // check initial speed
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, dsm.get_current_speed());
+
+    // move
+    dsm.move(-1000);
+    ThisThread::sleep_for(500ms);
+
+    // emergency stop
+    {
+        CriticalSectionLock lock;
+        switch_speed = dsm.get_current_speed_int();
+        switch_pos = dsm.get_current_position();
+        dsm.set_mode_constant_acceleration(1000.0f, 2000.0f, switch_speed);
+        dsm.set_target_position(switch_pos);
+    }
+    dsm.wait_end_of_movement();
+
+    // check result speed
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, dsm.get_current_speed());
+
+    // check results
+    TEST_ASSERT_INT_WITHIN(50, -500, switch_pos);
+    TEST_ASSERT_FLOAT_WITHIN(50.0f, -1000.0f, switch_speed);
+    TEST_ASSERT_INT_WITHIN(50, 250, dsm.dsm_get_total_steps_forward());
+    TEST_ASSERT_INT_WITHIN(50, 750, dsm.dsm_get_total_steps_backward());
+}
+
 // test cases description
 #define SimpleCase(test_fun) Case(#test_fun, app_case_setup_handler, test_fun, app_case_teardown_handler, greentea_case_failure_continue_handler)
 static Case cases[] = {
@@ -579,7 +723,12 @@ static Case cases[] = {
     SimpleCase(test_active_base_enable_disable_functionality),
     // test configuration methods
     SimpleCase(test_configuration_methods),
-    SimpleCase(test_impl_errors)
+    SimpleCase(test_impl_errors),
+    // test mode changes during movement
+    SimpleCase(test_smooth_mode_switch_forward_with_int_speed_estimation),
+    SimpleCase(test_smooth_mode_switch_backward_with_int_speed_estimation),
+    SimpleCase(test_smooth_mode_switch_forward_with_float_speed_estimation),
+    SimpleCase(test_smooth_mode_switch_backward_with_float_speed_estimation),
 };
 static Specification specification(app_test_setup_handler, cases, app_test_teardown_handler);
 

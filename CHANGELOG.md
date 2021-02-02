@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add possibility to set sequence function after `SimpleSequenceWrapper` object creation.
+- Add `BaseStepperMotor::get_current_speed`, `BaseStepperMotor::get_current_speed_int` methods that allows to get current speed.
+- Overload `BaseStepperMotor::set_mode_constant_acceleration` method to add `initial_speed` parameter.
 
 ## [0.1.0] - 2020-12-05
 

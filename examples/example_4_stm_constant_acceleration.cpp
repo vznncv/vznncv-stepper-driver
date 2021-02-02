@@ -4,7 +4,7 @@
  * Usage
  * Press and hold a user button during some seconds to increase target stepper motor position and start movement.
  * During stepper motor movement standard output (UART) will show current stepper motor position.
- * If you press and hold the user button again, target position will be being changed but in the invers direction.
+ * If you press and hold the user button again, target position will be being changed but in the inverse direction.
  */
 #include "mbed.h"
 #include "vznncv_stepper_motor.h"

@@ -228,6 +228,7 @@ private:
     // step error
     int _err;
 
+    microseconds_u32 _last_delay;
     bool _initialized;
     MoveDirection _last_dir;
     State _state;
@@ -292,6 +293,16 @@ public:
      * @return 0 on success, otherwise non-zero value
      */
     int set_mode_constant_acceleration(float max_speed, float max_acceleration);
+
+    /**
+     * Set movement to mode with constant acceleration.
+     *
+     * @param max_speed maximal stepper motor speed. Unit - steps/s
+     * @param max_acceleration maximal stepper motor acceleration. Unit - steps/s^2
+     * @param initial_speed initial speed
+     * @return 0 on success, otherwise non-zero value
+     */
+    int set_mode_constant_acceleration(float max_speed, float max_acceleration, float initial_speed);
 
     /**
      * Set movement to mode with custom step.
@@ -417,6 +428,22 @@ public:
      * @return
      */
     int distance_to_go() const;
+
+    /**
+     * Get estimation for current stepper motor speed.
+     *
+     * @return current speed.
+     */
+    float get_current_speed() const;
+
+    /**
+     * Get estimation for current stepper motor speed as integer number.
+     *
+     * This function a little bit faster than :get_current_speed.
+     *
+     * @return current speed.
+     */
+    int get_current_speed_int() const;
 
     /**
      * Enable/disabled stepper motor.
